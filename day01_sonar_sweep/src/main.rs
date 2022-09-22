@@ -1,10 +1,3 @@
-use std::env;
-use std::fs::File;
-use std::io::BufRead;
-use std::io::BufReader;
-use std::path::Path;
-use std::process;
-
 struct SonarSweep {
     increase1_count: i32, // Number of increases (line by line)
     increase3_count: i32, // Number of increases (sliding window)
