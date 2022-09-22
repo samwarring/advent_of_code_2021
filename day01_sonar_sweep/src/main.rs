@@ -5,46 +5,81 @@ use std::io::BufReader;
 use std::path::Path;
 use std::process;
 
-fn main() {
-    // Get input file from command line.
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        println!("Usage: {} <input file>", args[0]);
-        process::exit(1);
+struct SonarSweep {
+    increase1_count: i32, // Number of increases (line by line)
+    increase3_count: i32, // Number of increases (sliding window)
+    prev_values: [i32; 3]
+}
+
+impl SonarSweep {
+    fn new(val1: i32, val2: i32, val3: i32) -> Self {
+        let mut initial_count = 0;
+        if val1 < val2 {
+            initial_count += 1;
+        }
+        if val2 < val3 {
+            initial_count += 1;
+        }
+        Self {
+            increase1_count: initial_count,
+            increase3_count: 0,
+            prev_values: [val1, val2, val3]
+        }
     }
-    let input_path = Path::new(&args[1]);
 
-    // Open file read-only.
-    let file = match File::open(&input_path) {
-        Err(msg) => panic!("Could not open file for reading: {} ({})", input_path.display(), msg),
-        Ok(f) => f
-    };
-
-    // Keep track of the most recent value and the number of adjacent value increases.
-    let mut optional_prev_value: Option<i32> = None;
-    let mut increase_count: i32 = 0;
-
-    // Read the file line by line.
-    let line_reader = BufReader::new(&file).lines();
-    for line_result in line_reader {
-        let line = line_result.expect("Failed to read line");
-
-        // Parse integer value from the line.
-        let cur_value: i32 = match line.parse() {
-            Err(_) => panic!("Could not parse value from line: {}", &line),
-            Ok(val) => val
-        };
-
-        // Compare to previous value (if present).
-        if let Some(prev_value) = optional_prev_value {
-            if prev_value < cur_value {
-                increase_count += 1;
-            }
+    fn sweep(&mut self, val: i32) {
+        // If number coming in greater than previous number, then
+        // line-by-line increased.
+        if self.prev_values[2] < val {
+            self.increase1_count += 1;
         }
 
-        // Current value is now the previous value.
-        optional_prev_value = Some(cur_value);
+        // If number entering window greater than number coming out, then
+        // sliding-window depth increased.
+        if self.prev_values[0] < val {
+            self.increase3_count += 1;
+        }
+
+        // Shift the sliding window.
+        self.prev_values[0] = self.prev_values[1];
+        self.prev_values[1] = self.prev_values[2];
+        self.prev_values[2] = val;
     }
 
-    println!("Number of increases: {}", increase_count);
+    fn report(&self) {
+        println!("Number of increases (line-by-line):   {}", self.increase1_count);
+        println!("Number of increases (sliding window): {}", self.increase3_count);
+    }
+}
+
+fn read_value() -> Option<i32> {
+    // Read line from stdin.
+    let mut line = String::new();
+    return match std::io::stdin().read_line(&mut line) {
+        Err(e) => panic!("Failed to read line: {}", e),
+        Ok(0) => None,
+        Ok(_) =>
+            // Parse int from line
+            match line.trim().parse::<i32>() {
+                Err(_) => panic!("Could not parse i32 from line: {}", line),
+                Ok(val) => Some(val)
+            }
+    };
+}
+
+fn main() {
+    // Initialize the sliding window.
+    let mut sweeper = SonarSweep::new(
+        read_value().expect("Could not read 1st value"),
+        read_value().expect("Could not read 2nd value"),
+        read_value().expect("Could not read 3rd value")
+    );
+
+    // Sweep values from stdin.
+    while let Some(value) = read_value() {
+        sweeper.sweep(value);
+    }
+
+    // Print results
+    sweeper.report();
 }
