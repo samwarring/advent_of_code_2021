@@ -15,12 +15,6 @@ impl VentMap {
         }
     }
 
-    fn get(&self, x: usize, y:usize) -> i8 {
-        assert!(x < self.x_size);
-        assert!(y < self.y_size);
-        self.grid[self.x_size * y + x]
-    }
-
     fn set(&mut self, x: usize, y: usize) {
         assert!(x < self.x_size);
         assert!(y < self.y_size);
@@ -47,6 +41,24 @@ impl VentMap {
             while x <= x_max {
                 self.set(x, y1);
                 x += 1;
+            }
+        }
+        else {
+            let mut p1: (usize, usize); // Point with lesser x value.
+            let mut p2: (usize, usize); // Point with greater x value.
+            if x1 < x2 {
+                p1 = (x1, y1);
+                p2 = (x2, y2);
+            } else {
+                p1 = (x2, y2);
+                p2 = (x1, y1);
+            }
+            let dy: i32 = if p1.1 < p2.1 { 1 } else { -1 }; // slope is +1 or -1
+            let (mut x, mut y) = p1;
+            while x <= p2.0 {
+                self.set(x, y);
+                x += 1;
+                y = (y as i32 + dy) as usize;
             }
         }
     }
@@ -77,7 +89,8 @@ fn main() {
                 let y1 = split[1];
                 let x2 = split[2];
                 let y2 = split[3];
-                println!("({},{}) -> ({},{})", x1, y1, x2, y2);
+                let slope = if x1 == x2 { f32::INFINITY } else { (y2 as f32 - y1 as f32) / (x2 as f32 - x1 as f32) };
+                println!("({},{}) -> ({},{})  slope: {}", x1, y1, x2, y2, slope);
                 vm.set_line(x1, y1, x2, y2)
             }
         }
