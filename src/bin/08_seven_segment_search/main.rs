@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use std::collections::BTreeMap;
 
+// One entry of puzzle input
 #[derive(Debug)]
 struct Entry {
     signal_patterns: Vec<String>,
@@ -29,12 +30,11 @@ fn read_entry() -> Option<Entry> {
     Some(entry)
 }
 
+// Describes an arrangement of wires connected to the segment display.
 #[derive(Debug)]
 struct Arrangement {
     wire_targets: Vec<char>,
     segment_patterns: Vec<String>,
-    //normalized_segment_patterns: Vec<String>,
-    //normalized_string: String,
     normalized_id: u128
 }
 
@@ -45,8 +45,6 @@ impl Arrangement {
         let mut arr = Arrangement {
             wire_targets: wire_targets,
             segment_patterns: Vec::new(),
-            //normalized_segment_patterns: Vec::new(),
-            //normalized_string: String::new(),
             normalized_id: 0u128,
         };
 
@@ -143,21 +141,12 @@ impl Arrangement {
             arr.wire_targets[g],
         ].iter().collect());
 
-        // Leave the above segment patterns vector untouched (for the sake
-        // of debugging - and by extension - our sanity). Create a copy
-        // of the pattern vector and "normalize" it.
-        //arr.normalized_segment_patterns = arr.segment_patterns.clone();
-        // arr.normalized_segment_patterns.iter_mut()
-        //     .for_each(|s|{ *s = s.chars().sorted().collect(); });
-
-        //normalize(&mut arr.normalized_segment_patterns);
-        //arr.normalized_string = arr.normalized_segment_patterns.join(",");
-        //arr.normalized_id = normalized_value(&arr.normalized_segment_patterns);
         arr.normalized_id = normalized_value(&arr.segment_patterns);
 
         return arr;
     }
 
+    // Decodes a single signal into the numeric value being communicated.
     fn decode_one(&self, signal: &str) -> i32 {
         for (i, check_signal) in self.segment_patterns.iter().enumerate() {
             if normalized_byte(signal) == normalized_byte(&check_signal) {
@@ -167,6 +156,7 @@ impl Arrangement {
         panic!("Arrangement {:?} cannot decode {}", self.wire_targets, signal);
     }
 
+    // Decodes a series of signals to build up the intended N-digit value.
     fn decode_many(&self, signals: &Vec<String>) -> i32 {
         let mut res = 0;
         for signal in signals {
@@ -176,19 +166,11 @@ impl Arrangement {
     }
 }
 
-// First, sorts each individual string in the signal vector.
-// Then, sorts the entire vector alphabetically. This yields
-// the unique "characteristic" vector for the specific arrangement.
-#[allow(unused)]
-fn normalize(signals: &mut Vec<String>) {
-    for signal in signals.iter_mut() {
-        let mut chars: Vec<char> = signal.chars().collect();
-        chars.sort();
-        *signal = chars.into_iter().collect();
-    }
-    signals.sort();
-}
-
+// Transforms a signal into a single byte describing that signal.
+// The output value is shared by all arrangements of the same signal.
+// For instance, "abcg", "gcab", "agbc", etc. are all just different
+// arrangements of the same signal, so they have the same normalized
+// byte value.
 fn normalized_byte(signal: &str) -> u8 {
     let mut byte = 0u8;
     for ch in signal.chars() {
@@ -206,6 +188,12 @@ fn normalized_byte(signal: &str) -> u8 {
     return byte;
 }
 
+// Transforms a set of signals into a unique value describing that
+// set of signals. Each signal in the list is first normalized. Then,
+// the normalized values are sorted and joined together into an 80-bit
+// binary value optimized for comparisions. This lets us detect if
+// different sets of signals are actually just re-arrangements of the
+// same canonical set.
 fn normalized_value(signals: &Vec<String>) -> u128 {
     let mut normalized_bytes: Vec<u8> = signals.iter()
         .map(|s| { s.as_str() })
@@ -240,10 +228,9 @@ fn main() {
     }
     println!("Total 'obvious' outputs: {}", obvious_output_digits_count);
 
-    // Part 2
-
-    // For every possible arrangement, calculate the resulting
-    // signal patterns. Store them in a map to quickly lookup the arrangement
+    // Part 2 - Answer: 1070957
+    // For every possible arrangement, calculate the resulting signal
+    // patterns. Store them in a map to quickly lookup the arrangement
     // given the unique normalized value.
     println!("Computing lookup table");
     let mut arrangements: BTreeMap<u128, Arrangement> = BTreeMap::new();
@@ -262,7 +249,6 @@ fn main() {
         if let Some(arr) = arrangements.get(&entry_id) {
             let decoded_value = arr.decode_many(&entry.outputs);
             decoded_sum += decoded_value;
-            println!("{:?} {:?} = {}", entry.signal_patterns, entry.outputs, decoded_value);
         }
         else {
             panic!("Did not find any arrangement for entry {:?} ({})", entry.signal_patterns, entry_id);
