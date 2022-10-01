@@ -1,5 +1,3 @@
-use std::cmp::min_by;
-
 struct VentMap {
     x_size: usize,
     y_size: usize,
@@ -44,8 +42,8 @@ impl VentMap {
             }
         }
         else {
-            let mut p1: (usize, usize); // Point with lesser x value.
-            let mut p2: (usize, usize); // Point with greater x value.
+            let p1: (usize, usize); // Point with lesser x value.
+            let p2: (usize, usize); // Point with greater x value.
             if x1 < x2 {
                 p1 = (x1, y1);
                 p2 = (x2, y2);
@@ -80,7 +78,7 @@ fn main() {
             Err(_) => panic!("Failed to read line"),
             Ok(0)  => break,
             Ok(_)  => {
-                let mut split: Vec<usize> = line
+                let split: Vec<usize> = line
                     .split(|ch|{ !char::is_numeric(ch) })
                     .filter(|s|{ !s.is_empty() })
                     .map(parse)
