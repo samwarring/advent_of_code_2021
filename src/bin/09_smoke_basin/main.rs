@@ -1,5 +1,4 @@
 // lazysort lets us sort the first N elements of a vector.
-extern crate lazysort;
 use lazysort::SortedBy;
 
 // Represents a 2D grid of height values.
