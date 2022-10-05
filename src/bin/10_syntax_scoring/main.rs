@@ -14,12 +14,12 @@ fn score_syntax_error(c: char) -> i32 {
 fn score_incomplete(tail: &str) -> i64 {
     let mut total = 0;
     for c in tail.chars() {
-        total = total * 5;
+        total *= 5;
         total += match c {
-            ')' => 1i64,
-            ']' => 2i64,
-            '}' => 3i64,
-            '>' => 4i64,
+            ')' => 1,
+            ']' => 2,
+            '}' => 3,
+            '>' => 4,
             _ => panic!("score(Incomplete({}))", c)
         };
     }
