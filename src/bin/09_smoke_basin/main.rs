@@ -2,33 +2,22 @@
 extern crate lazysort;
 use lazysort::SortedBy;
 
-struct Grid<T> {
+// Represents a 2D grid of height values.
+struct HeightMap {
     rows: usize,
     cols: usize,
-    values: Vec<T>,
+    values: Vec<i8>,
 }
 
-impl<T> Grid<T> {
-    fn new() -> Self {
-        Grid {
+impl HeightMap {
+
+    // Reads a HeightMap from standard input.
+    fn new_from_stdin() -> Self {
+        let mut hm = HeightMap {
             rows: 0,
             cols: 0,
             values: Vec::new(),
-        }
-    }
-
-    fn at(&self, row: usize, col: usize) -> &T {
-        assert!(row < self.rows);
-        assert!(col < self.cols);
-        &self.values[(row * self.cols) + col]
-    }
-}
-
-type HeightMap = Grid<i8>;
-
-impl HeightMap {
-    fn new_from_stdin() -> Self {
-        let mut hm = HeightMap::new();
+        };
 
         let mut line = String::new();
         while let Ok(n) = std::io::stdin().read_line(&mut line) {
@@ -57,6 +46,15 @@ impl HeightMap {
         hm
     }
 
+    // Get the height at (row, col)
+    fn at(&self, row: usize, col: usize) -> &i8 {
+        assert!(row < self.rows);
+        assert!(col < self.cols);
+        &self.values[(row * self.cols) + col]
+    }
+
+    // Get vector of (row, col, value) for each local minimum
+    // in the height map.
     fn low_points(&self) -> Vec<(usize, usize, i8)> {
         let mut res: Vec<(usize, usize, i8)> = Vec::new();
 
